@@ -5,11 +5,22 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const isWorkerRequest = new URL(request.url).searchParams.get("worker") === "1";
   const body = (await request.json().catch(() => null)) as { force?: boolean } | null;
   const serviceState = await syncCompetitionServiceState({
     force: Boolean(body?.force),
   });
-  const admin = await getCompetitionAdminSnapshot();
+
+  if (isWorkerRequest) {
+    return NextResponse.json({
+      competitionService: serviceState,
+      serviceState,
+    });
+  }
+
+  const admin = await getCompetitionAdminSnapshot({
+    skipServiceSync: true,
+  });
 
   return NextResponse.json({
     admin,

@@ -13,3 +13,7 @@ data/*.json
 !data/.gitkeep
 details.txt
 bounty-research.md
+submission/demo-script.md
+submission/pilot-map-page-outline.md
+submission/adrena-competition-service-integration-plan.md
+submission/pilot-feedback-template.md

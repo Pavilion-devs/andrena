@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const isWorkerRequest = new URL(request.url).searchParams.get("worker") === "1";
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
 
   if (!body) {
@@ -21,6 +22,13 @@ export async function POST(request: Request) {
   }
 
   const result = await ingestCompetitionServiceCloseEvent(body);
+
+  if (isWorkerRequest) {
+    return NextResponse.json({
+      result,
+    });
+  }
+
   const event = result.event ?? null;
   const snapshot = result.stored ? await recomputeCompetitionState() : null;
   const participant = event?.wallet

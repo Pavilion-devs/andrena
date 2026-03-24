@@ -3,7 +3,9 @@ import {
   getActiveCompetition,
   getCompetitionServiceState,
   readDatabase,
+  readCompetitionServiceStateRecord,
   updateDatabase,
+  writeCompetitionServiceStateRecord,
 } from "@/lib/storage";
 import type {
   CompetitionServiceCloseEventRecord,
@@ -322,9 +324,7 @@ export async function syncCompetitionServiceState({
   force?: boolean;
   staleMinutes?: number;
 } = {}) {
-  const database = await readDatabase();
-  const competition = getActiveCompetition(database);
-  const currentState = getCompetitionServiceState(database, competition.id);
+  const currentState = await readCompetitionServiceStateRecord();
   const lastCheckedAt = currentState.health.checkedAt;
 
   if (
@@ -344,74 +344,86 @@ export async function syncCompetitionServiceState({
     fetchCompetitionServicePositionSchema(),
   ]);
 
-  return updateDatabase((mutableDatabase) => {
-    const mutableCompetition = getActiveCompetition(mutableDatabase);
-    const serviceState = getCompetitionServiceState(
-      mutableDatabase,
-      mutableCompetition.id
-    );
-    const now = getSystemTimestamp();
+  const nextState = {
+    ...currentState,
+    health: {
+      ...currentState.health,
+    },
+    sizeMultiplier: {
+      ...currentState.sizeMultiplier,
+      notes: [...currentState.sizeMultiplier.notes],
+      tiers: [...currentState.sizeMultiplier.tiers],
+    },
+    positionSchema: {
+      ...currentState.positionSchema,
+      closeInstructions: [...currentState.positionSchema.closeInstructions],
+      pdaSeeds: [...currentState.positionSchema.pdaSeeds],
+    },
+    stream: {
+      ...currentState.stream,
+    },
+  };
+  const now = getSystemTimestamp();
 
-    if (healthResult.status === "fulfilled") {
-      serviceState.health = {
-        checkedAt: healthResult.value.checkedAt,
-        status: healthResult.value.status,
-        responseTimeMs: healthResult.value.responseTimeMs,
-        serviceTimestamp: healthResult.value.serviceTimestamp,
-        errorMessage: null,
-      };
-    } else {
-      serviceState.health = {
-        checkedAt: now,
-        status: "unreachable",
-        responseTimeMs: null,
-        serviceTimestamp: null,
-        errorMessage:
-          healthResult.reason instanceof Error
-            ? healthResult.reason.message
-            : "Health check failed.",
-      };
-    }
+  if (healthResult.status === "fulfilled") {
+    nextState.health = {
+      checkedAt: healthResult.value.checkedAt,
+      status: healthResult.value.status,
+      responseTimeMs: healthResult.value.responseTimeMs,
+      serviceTimestamp: healthResult.value.serviceTimestamp,
+      errorMessage: null,
+    };
+  } else {
+    nextState.health = {
+      checkedAt: now,
+      status: "unreachable",
+      responseTimeMs: null,
+      serviceTimestamp: null,
+      errorMessage:
+        healthResult.reason instanceof Error
+          ? healthResult.reason.message
+          : "Health check failed.",
+    };
+  }
 
-    if (multiplierResult.status === "fulfilled") {
-      serviceState.sizeMultiplier = multiplierResult.value;
-    } else if (serviceState.sizeMultiplier.tiers.length === 0) {
-      serviceState.sizeMultiplier = getFallbackSizeMultiplierCache();
-    }
+  if (multiplierResult.status === "fulfilled") {
+    nextState.sizeMultiplier = multiplierResult.value;
+  } else if (nextState.sizeMultiplier.tiers.length === 0) {
+    nextState.sizeMultiplier = getFallbackSizeMultiplierCache();
+  }
 
-    if (schemaResult.status === "fulfilled") {
-      serviceState.positionSchema = schemaResult.value;
-    }
+  if (schemaResult.status === "fulfilled") {
+    nextState.positionSchema = schemaResult.value;
+  }
 
-    if (
-      healthResult.status === "rejected" ||
-      multiplierResult.status === "rejected" ||
+  if (
+    healthResult.status === "rejected" ||
+    multiplierResult.status === "rejected" ||
+    schemaResult.status === "rejected"
+  ) {
+    nextState.stream.lastErrorAt = now;
+    nextState.stream.lastErrorMessage = [
+      healthResult.status === "rejected"
+        ? healthResult.reason instanceof Error
+          ? healthResult.reason.message
+          : "health failed"
+        : null,
+      multiplierResult.status === "rejected"
+        ? multiplierResult.reason instanceof Error
+          ? multiplierResult.reason.message
+          : "multiplier failed"
+        : null,
       schemaResult.status === "rejected"
-    ) {
-      serviceState.stream.lastErrorAt = now;
-      serviceState.stream.lastErrorMessage = [
-        healthResult.status === "rejected"
-          ? healthResult.reason instanceof Error
-            ? healthResult.reason.message
-            : "health failed"
-          : null,
-        multiplierResult.status === "rejected"
-          ? multiplierResult.reason instanceof Error
-            ? multiplierResult.reason.message
-            : "multiplier failed"
-          : null,
-        schemaResult.status === "rejected"
-          ? schemaResult.reason instanceof Error
-            ? schemaResult.reason.message
-            : "schema failed"
-          : null,
-      ]
-        .filter(Boolean)
-        .join(" | ");
-    }
+        ? schemaResult.reason instanceof Error
+          ? schemaResult.reason.message
+          : "schema failed"
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" | ");
+  }
 
-    return serviceState;
-  });
+  return writeCompetitionServiceStateRecord(nextState);
 }
 
 export async function reportCompetitionServiceStreamStatus({
@@ -427,26 +439,22 @@ export async function reportCompetitionServiceStreamStatus({
   lastSignature?: string | null;
   timestamp?: string;
 }) {
-  return updateDatabase((database) => {
-    const competition = getActiveCompetition(database);
-    const serviceState = getCompetitionServiceState(database, competition.id);
+  const serviceState = await readCompetitionServiceStateRecord();
 
-    applyStreamStateUpdate(serviceState.stream, {
-      status,
-      reconnectAttempts,
-      errorMessage,
-      lastSignature,
-      timestamp,
-    });
-
-    return serviceState.stream;
+  applyStreamStateUpdate(serviceState.stream, {
+    status,
+    reconnectAttempts,
+    errorMessage,
+    lastSignature,
+    timestamp,
   });
+
+  const nextState = await writeCompetitionServiceStateRecord(serviceState);
+  return nextState.stream;
 }
 
 export async function getCompetitionServiceStateSnapshot() {
-  const database = await readDatabase();
-  const competition = getActiveCompetition(database);
-  return getCompetitionServiceState(database, competition.id);
+  return readCompetitionServiceStateRecord();
 }
 
 function parseSide(value: unknown) {

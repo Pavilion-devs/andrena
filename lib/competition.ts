@@ -658,8 +658,14 @@ function buildPointsComposition(entries: ScoreLedgerEntry[]) {
   };
 }
 
-export async function getCompetitionAdminSnapshot(): Promise<CompetitionAdminSnapshot> {
-  await syncCompetitionServiceState().catch(() => null);
+export async function getCompetitionAdminSnapshot({
+  skipServiceSync = false,
+}: {
+  skipServiceSync?: boolean;
+} = {}): Promise<CompetitionAdminSnapshot> {
+  if (!skipServiceSync) {
+    await syncCompetitionServiceState().catch(() => null);
+  }
 
   let database = await readDatabase();
   let competition = getActiveCompetition(database);

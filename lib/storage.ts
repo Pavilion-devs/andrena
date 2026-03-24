@@ -1064,6 +1064,44 @@ function competitionServiceStateRecordToRow(record: CompetitionServiceStateRecor
   };
 }
 
+function mergeCompetitionServiceStateRecord(
+  record: CompetitionServiceStateRecord | null | undefined,
+  competitionId = competitionConfig.id
+): CompetitionServiceStateRecord {
+  const base = createCompetitionServiceState(competitionId);
+
+  if (!record) {
+    return base;
+  }
+
+  return {
+    ...base,
+    ...record,
+    competitionId,
+    health: {
+      ...base.health,
+      ...(record.health ?? {}),
+    },
+    sizeMultiplier: {
+      ...base.sizeMultiplier,
+      ...(record.sizeMultiplier ?? {}),
+      notes: record.sizeMultiplier?.notes ?? base.sizeMultiplier.notes,
+      tiers: record.sizeMultiplier?.tiers ?? base.sizeMultiplier.tiers,
+    },
+    positionSchema: {
+      ...base.positionSchema,
+      ...(record.positionSchema ?? {}),
+      closeInstructions:
+        record.positionSchema?.closeInstructions ?? base.positionSchema.closeInstructions,
+      pdaSeeds: record.positionSchema?.pdaSeeds ?? base.positionSchema.pdaSeeds,
+    },
+    stream: {
+      ...base.stream,
+      ...(record.stream ?? {}),
+    },
+  };
+}
+
 function closeEventRecordToRow(record: PilotDatabase["closeEvents"][number]) {
   return {
     id: record.id,
@@ -1308,6 +1346,56 @@ export async function writeDatabase(database: PilotDatabase) {
   }
 
   await writeDatabaseToFile(normalized);
+}
+
+export async function readCompetitionServiceStateRecord(
+  competitionId = competitionConfig.id
+) {
+  if (!isSupabaseConfigured()) {
+    const database = normalizeDatabase(await readDatabaseFromFile());
+    return mergeCompetitionServiceStateRecord(
+      database.competitionServiceStates.find((entry) => entry.competitionId === competitionId),
+      competitionId
+    );
+  }
+
+  const rows =
+    (await supabaseRequest<Record<string, unknown>[] | null>({
+      table: "competition_service_states",
+      query: {
+        select: "*",
+        competition_id: `eq.${competitionId}`,
+        limit: "1",
+      },
+    })) ?? [];
+
+  return mergeCompetitionServiceStateRecord(
+    rows[0] ? competitionServiceStateRowToRecord(rows[0]) : null,
+    competitionId
+  );
+}
+
+export async function writeCompetitionServiceStateRecord(
+  record: CompetitionServiceStateRecord
+) {
+  const normalizedRecord = mergeCompetitionServiceStateRecord(record, record.competitionId);
+
+  if (isSupabaseConfigured()) {
+    await upsertSupabaseRows("competition_service_states", "competition_id", [
+      competitionServiceStateRecordToRow(normalizedRecord),
+    ]);
+  }
+
+  const fileDatabase = normalizeDatabase(await readDatabaseFromFile());
+  fileDatabase.competitionServiceStates = [
+    ...fileDatabase.competitionServiceStates.filter(
+      (entry) => entry.competitionId !== normalizedRecord.competitionId
+    ),
+    normalizedRecord,
+  ];
+  await writeDatabaseToFile(fileDatabase);
+
+  return normalizedRecord;
 }
 
 export async function updateDatabase<T>(

@@ -1,108 +1,114 @@
-# Adrena Battlecards League Pilot
+# Adrena Battlecards League
 
-Prototype app for the Adrena bounty research and submission package.
+Adrena Battlecards League is a pilot-ready competition layer for Adrena. It turns a standard trading leaderboard into a weekly league with daily battlecards, deterministic scoring, audit trails, and operator tooling.
 
-## What it includes
+The app is built as a working prototype, not just a deck. Traders can connect wallets, register for the league, refresh Adrena history, inspect their score evidence, and launch quotes from battlecards. Operators can publish daily card sets, sync the Adrena competition service, review flags and overrides, recompute the league, and monitor runtime health.
 
-- Next.js MVP frontend
-- Supabase-backed pilot database when `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are configured
-- local backup mirror in `data/pilot-db.json`
-- live wallet registration against Adrena `GET /position`
-- injected-wallet connection for Phantom, Backpack, and Solflare-style providers
-- Solana wallet-adapter connection and modal-based wallet selection
-- anti-whale score engine
-- daily battlecards
-- leaderboard, streaks, and raffle ticket tracking
-- deterministic score ledger and leaderboard snapshot history
-- admin ops dashboard with participant audit views
-- persisted scheduler runtime, tick logs, and pilot metrics
-- official Adrena competition-service sync for health, size-multiplier tiers, and position schema metadata
-- close-position event ingestion with persisted realized-PnL evidence
-- a standalone competition-service worker that subscribes to Adrena's WebSocket stream and posts normalized events back into the app
-- card publishing controls for daily battlecards
-- review flags / disputes and manual score-ticket overrides
-- participant history/evidence view backed by positions, close events, cards, and ledger records
-- trade quote launcher using Adrena public transaction-builder endpoints
-- wallet-backed signing and submission of serialized Adrena trade transactions, gated behind an explicit mainnet opt-in
+## Features
 
-## Run it
+- wallet connection with Solana wallet adapter
+- live wallet registration and Adrena position refresh
+- daily battlecards, weekly leaderboard, streaks, and raffle tickets
+- deterministic score ledger and leaderboard snapshots
+- participant history with trade, card, and close-event evidence
+- admin ops dashboard for publishing, review, overrides, and recompute
+- Supabase-backed pilot storage with a local JSON mirror
+- Adrena competition-service integration for health, size multipliers, schema metadata, and close-position events
+- standalone realtime worker for competition-service WebSocket ingestion
+- safe-mode demo quotes plus gated live mainnet trade submission
+
+## Tech Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Solana wallet adapter
+- Supabase REST-backed persistence
+- Adrena public trading APIs
+- Adrena competition-service REST and WebSocket feeds
+
+## Getting Started
+
+Install dependencies and start the app:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then open:
+Open `http://localhost:3000`.
 
-- `http://localhost:3000`
-
-To run the realtime close-event worker alongside the app:
+To run the realtime worker alongside the app:
 
 ```bash
 npm run worker:competition-service
 ```
 
-## Important prototype notes
+## Environment
 
-- The pilot window is fixed to `March 17, 2026` through `March 23, 2026`.
-- The app starts empty on purpose. All participant views are now driven by registered live wallets only.
+Copy `.env.example` to `.env` and fill in the values you need.
+
+Important variables:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `ADRENA_COMPETITION_SERVICE_BASE_URL`
+- `ADRENA_COMPETITION_SERVICE_WS_BASE_URL`
+- `ADRENA_COMPETITION_SERVICE_API_KEY`
+- `COMPETITION_SERVICE_WORKER_APP_URL`
+- `NEXT_PUBLIC_ENABLE_MAINNET_TRADES`
+
+## Runtime Notes
+
+- The prototype is currently configured around a fixed pilot week in [lib/config.ts](lib/config.ts).
+- The app starts empty on purpose and expects real registered wallets.
 - When Supabase is configured, it becomes the primary backend automatically.
-- If Supabase is empty on first boot, the app seeds it from the local `data/pilot-db.json` snapshot.
-- Live wallet refresh uses Adrena's public API and updates the Supabase-backed state plus the local backup mirror.
-- The trade launcher now defaults to live-supported Adrena market symbols like `JITOSOL` and `WBTC`.
-- Trade quote requests use Adrena's live public builder.
-- Real transaction submission is disabled by default. Building a quote is safe; signing and sending is blocked unless you explicitly opt in.
-- In safe mode, the trade page also offers `Build Demo Quote`, a non-executable preview derived from live Adrena pool/liquidity context plus live token pricing when available.
-- Leaderboard score is `trade points + battlecard points + streak points`.
-- Raffle tickets are tracked separately from ranking.
-- Runtime ticks can be run from the admin dashboard and are logged with skipped/success/failed status.
-- The admin snapshot exposes pilot metrics like score dispersion, top-wallet concentration, full-set rate, and ingestion failures.
-- The admin dashboard can sync the team-provided competition service and manually ingest normalized `close_position` events for testing or operator replay.
-- The standalone worker connects to the team-provided WebSocket stream and updates admin stream status through the app's service routes.
-- Scored trades now record the size-multiplier input and evidence source used during recompute.
-- Review items and overrides are stored as explicit records and survive recompute without hidden data edits.
+- If Supabase is empty on first boot, the app seeds it from the local `data/pilot-db.json` mirror.
+- Runtime ticks, service sync state, refresh runs, and leaderboard snapshots are all persisted.
 
-## Mainnet safety
+## Safe Mode
 
-This project currently integrates with Adrena's live public transaction builder. To prevent accidental real-money trades, live submission is off by default.
+The project talks to Adrena's live public transaction builder, so live transaction submission is disabled by default.
 
-To keep the app in safe mode:
+Default behavior:
 
-```bash
-npm run dev
-```
-
-In that mode:
-
-- `Build Demo Quote` gives you a realistic, non-executable trade preview for demos
-- `Build Live Quote` still talks to Adrena's real public builder
+- `Build Demo Quote` returns a non-executable preview for demos
+- `Build Live Quote` still proves the live Adrena integration
 - `Sign And Send Transaction` stays disabled
 
-To intentionally enable real mainnet transaction submission:
+To intentionally enable real mainnet trade submission:
 
 ```bash
 NEXT_PUBLIC_ENABLE_MAINNET_TRADES=true npm run dev
 ```
 
-Only turn that on if you explicitly want the `Sign And Send Transaction` button to submit a live trade.
+Only enable that if you explicitly want to send live trades from the connected wallet.
 
-## Useful files
+## Project Structure
 
-- `app/page.tsx`
-- `app/dashboard/history/page.tsx`
-- `app/dashboard/admin/page.tsx`
-- `app/dashboard/admin/participants/[wallet]/page.tsx`
-- `components/dashboard/wallet-context.tsx`
-- `lib/competition.ts`
-- `lib/runtime.ts`
-- `lib/storage.ts`
-- `lib/scoring.ts`
-- `lib/adrena.ts`
-- `submission/README.md`
+- `app/` - routes, pages, and API handlers
+- `components/` - dashboard and landing-page UI
+- `hooks/` - client-side data and wallet hooks
+- `lib/` - scoring, storage, Adrena integrations, runtime, and admin logic
+- `scripts/` - standalone worker processes
+- `submission/` - public-facing bounty submission materials
+- `supabase/` - schema and migration notes
 
-## Optional override
+## Submission Docs
 
-To change the reference time for cards and scoring:
+The public submission materials are indexed in [submission/README.md](submission/README.md).
+
+## Useful Commands
+
+```bash
+npm run dev
+npm run worker:competition-service
+npm run lint
+npm run typecheck
+npm run build
+```
+
+To override the scoring reference time during demos:
 
 ```bash
 DEMO_NOW="2026-03-21T12:00:00Z" npm run dev

@@ -14,6 +14,7 @@ const allowedStatuses = new Set<CompetitionServiceStreamConnectionStatus>([
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const isWorkerRequest = new URL(request.url).searchParams.get("worker") === "1";
   const body = (await request.json().catch(() => null)) as
     | {
         status?: CompetitionServiceStreamConnectionStatus;
@@ -43,7 +44,16 @@ export async function POST(request: Request) {
   }
 
   const stream = await reportCompetitionServiceStreamStatus(body);
-  const admin = await getCompetitionAdminSnapshot();
+
+  if (isWorkerRequest) {
+    return NextResponse.json({
+      stream,
+    });
+  }
+
+  const admin = await getCompetitionAdminSnapshot({
+    skipServiceSync: true,
+  });
 
   return NextResponse.json({
     stream,

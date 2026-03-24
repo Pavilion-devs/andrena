@@ -42,8 +42,6 @@ What is still missing is a more structured, more game-like competition format th
 - [prototype-architecture.md](/Users/favourolaboye/Documents/andrena/submission/prototype-architecture.md): system design, API integration map, data model, deployment shape
 - [pilot-and-build-plan.md](/Users/favourolaboye/Documents/andrena/submission/pilot-and-build-plan.md): MVP scope, sprint plan, test competition, feedback loop
 - [testing-and-feedback.md](/Users/favourolaboye/Documents/andrena/submission/testing-and-feedback.md): engineering verification, pilot protocol, feedback collection, and honest remaining gap
-- [demo-script.md](/Users/favourolaboye/Documents/andrena/submission/demo-script.md): 2-3 minute word-for-word walkthrough for recording and live judging
-- [pilot-feedback-template.md](/Users/favourolaboye/Documents/andrena/submission/pilot-feedback-template.md): ready-to-send participant feedback form
 - [supabase/schema.sql](/Users/favourolaboye/Documents/andrena/supabase/schema.sql): Postgres schema for migrating the local normalized pilot store into Supabase
 - [supabase/README.md](/Users/favourolaboye/Documents/andrena/supabase/README.md): handoff note for applying the schema and the next key needed for real migration
 - [scoring.example.yaml](/Users/favourolaboye/Documents/andrena/submission/config/scoring.example.yaml): configurable league rules and reward weights

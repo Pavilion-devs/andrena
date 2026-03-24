@@ -4,6 +4,7 @@ const appUrl = (process.env.COMPETITION_SERVICE_WORKER_APP_URL?.trim() ||
   "http://127.0.0.1:3000").replace(/\/+$/, "");
 const reconnectBaseMs = Number(process.env.COMPETITION_SERVICE_WORKER_RECONNECT_BASE_MS || 1_000);
 const reconnectMaxMs = Number(process.env.COMPETITION_SERVICE_WORKER_RECONNECT_MAX_MS || 15_000);
+const requestTimeoutMs = Number(process.env.COMPETITION_SERVICE_WORKER_REQUEST_TIMEOUT_MS || 30_000);
 const syncOnConnect = process.env.COMPETITION_SERVICE_WORKER_SYNC_ON_CONNECT !== "false";
 
 if (!wsBaseUrl) {
@@ -36,7 +37,7 @@ async function postJson(pathname, payload) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(requestTimeoutMs),
   });
 
   const text = await response.text();
@@ -53,7 +54,7 @@ async function postJson(pathname, payload) {
 
 async function reportStreamStatus(status, extra = {}) {
   try {
-    await postJson("/api/admin/competition/service/stream", {
+    await postJson("/api/admin/competition/service/stream?worker=1", {
       status,
       reconnectAttempts,
       ...extra,
@@ -65,7 +66,7 @@ async function reportStreamStatus(status, extra = {}) {
 
 async function syncCompetitionService(force = false) {
   try {
-    const payload = await postJson("/api/admin/competition/service/sync", { force });
+    const payload = await postJson("/api/admin/competition/service/sync?worker=1", { force });
     log("synced competition service", {
       health: payload?.competitionService?.health?.status ?? "unknown",
       tiers: payload?.competitionService?.sizeMultiplier?.tiers?.length ?? 0,
@@ -76,7 +77,7 @@ async function syncCompetitionService(force = false) {
 }
 
 async function ingestCloseEvent(payload) {
-  const response = await postJson("/api/admin/competition/service/close-events", payload);
+  const response = await postJson("/api/admin/competition/service/close-events?worker=1", payload);
   const result = response?.result ?? null;
 
   if (result?.stored) {
@@ -241,6 +242,7 @@ process.on("SIGTERM", () => shutdown("SIGTERM"));
 log("starting worker", {
   appUrl,
   socketUrl,
+  requestTimeoutMs,
   syncOnConnect,
 });
 

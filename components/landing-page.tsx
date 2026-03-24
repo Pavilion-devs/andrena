@@ -46,30 +46,6 @@ const features = [
   },
 ];
 
-const testimonials = [
-  {
-    name: "Competitive Traders",
-    role: "High-Skill Players",
-    text: "Optimize your score through smart trading, card completion, and strategic placements. Skill and discipline outperform raw capital.",
-    image:
-      "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/c92852bb-a510-405a-85ab-ffa0fde136a4_320w.jpg",
-  },
-  {
-    name: "Mid-Tier Traders",
-    role: "Consistency Wins",
-    text: "Win through consistency and execution, not raw size. Volume is capped, cards matter, and streaks keep you in play all week.",
-    image:
-      "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4a77e6b3-efc2-47ae-a304-9e97bf3ebee3_320w.jpg",
-  },
-  {
-    name: "Casual Traders",
-    role: "Raffle & Streak Players",
-    text: "Still earn raffle tickets, streak progress, and visible milestones even without topping the leaderboard. Every day counts.",
-    image:
-      "https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/a34e7279-3582-477a-8b2b-d9e9789eb63c_320w.jpg",
-  },
-];
-
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -364,59 +340,59 @@ function HowItWorksSection() {
   );
 }
 
-function TestimonialsSection() {
-  const loop = [...testimonials, ...testimonials];
+// function TestimonialsSection() {
+//   const loop = [...testimonials, ...testimonials];
 
-  return (
-    <section
-      id="why-adrena"
-      className="py-16 sm:py-24 [animation:fadeSlideIn_0.8s_ease-out_0.1s_both] animate-on-scroll"
-    >
-      <div className="flex items-center justify-between mb-8">
-        <div className="space-y-1">
-          <p className="text-xs uppercase text-neutral-500 tracking-widest font-geist">
-            Built For Every Trader
-          </p>
-          <h2 className="text-3xl sm:text-4xl font-geist tracking-tighter font-medium">
-            Who It&apos;s For
-          </h2>
-        </div>
-      </div>
+//   return (
+//     <section
+//       id="why-adrena"
+//       className="py-16 sm:py-24 [animation:fadeSlideIn_0.8s_ease-out_0.1s_both] animate-on-scroll"
+//     >
+//       <div className="flex items-center justify-between mb-8">
+//         <div className="space-y-1">
+//           <p className="text-xs uppercase text-neutral-500 tracking-widest font-geist">
+//             Built For Every Trader
+//           </p>
+//           <h2 className="text-3xl sm:text-4xl font-geist tracking-tighter font-medium">
+//             Who It&apos;s For
+//           </h2>
+//         </div>
+//       </div>
 
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-neutral-200 bg-white">
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-24 sm:w-40 bg-gradient-to-r from-white to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-24 sm:w-40 bg-gradient-to-l from-white to-transparent z-10" />
-        <div className="py-6 sm:py-8">
-          <div className="flex gap-4 sm:gap-5 will-change-transform animate-[marquee-ltr_45s_linear_infinite]">
-            {loop.map((item, index) => (
-              <article
-                key={`${item.name}-${index}`}
-                className="shrink-0 w-[280px] sm:w-[360px] md:w-[420px] rounded-2xl border border-neutral-200 bg-neutral-50 p-5"
-              >
-                <div className="flex items-center gap-3">
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    width={36}
-                    height={36}
-                    className="size-9 object-cover rounded-full"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-neutral-900 font-geist">
-                      {item.name}
-                    </span>
-                    <p className="text-xs text-neutral-500 font-geist">{item.role}</p>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm sm:text-base text-neutral-700 font-geist">{item.text}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
+//       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-neutral-200 bg-white">
+//         <div className="pointer-events-none absolute inset-y-0 left-0 w-24 sm:w-40 bg-gradient-to-r from-white to-transparent z-10" />
+//         <div className="pointer-events-none absolute inset-y-0 right-0 w-24 sm:w-40 bg-gradient-to-l from-white to-transparent z-10" />
+//         <div className="py-6 sm:py-8">
+//           <div className="flex gap-4 sm:gap-5 will-change-transform animate-[marquee-ltr_45s_linear_infinite]">
+//             {loop.map((item, index) => (
+//               <article
+//                 key={`${item.name}-${index}`}
+//                 className="shrink-0 w-[280px] sm:w-[360px] md:w-[420px] rounded-2xl border border-neutral-200 bg-neutral-50 p-5"
+//               >
+//                 <div className="flex items-center gap-3">
+//                   <Image
+//                     src={item.image}
+//                     alt={item.name}
+//                     width={36}
+//                     height={36}
+//                     className="size-9 object-cover rounded-full"
+//                   />
+//                   <div>
+//                     <span className="text-sm font-medium text-neutral-900 font-geist">
+//                       {item.name}
+//                     </span>
+//                     <p className="text-xs text-neutral-500 font-geist">{item.role}</p>
+//                   </div>
+//                 </div>
+//                 <p className="mt-4 text-sm sm:text-base text-neutral-700 font-geist">{item.text}</p>
+//               </article>
+//             ))}
+//           </div>
+//         </div>
+//       </div>
+//     </section>
+//   );
+// }
 
 function Footer() {
   return (
@@ -552,7 +528,7 @@ export function LandingPage() {
         <Hero />
         <FeaturesSection />
         <HowItWorksSection />
-        <TestimonialsSection />
+        {/* <TestimonialsSection /> */}
         <Footer />
       </div>
     </div>

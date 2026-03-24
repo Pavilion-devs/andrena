@@ -1,0 +1,46 @@
+{
+  "competitionId": "week-1",
+  "dayKey": "2026-03-23",
+  "publishedAt": "2026-03-23T12:00:00Z",
+  "cards": [
+    {
+      "id": "perf-profit-sol-btc",
+      "category": "performance",
+      "difficulty": "medium",
+      "points": 8,
+      "title": "Green Close",
+      "description": "Close one profitable SOL or BTC trade with at least $2,500 total volume.",
+      "rule": {
+        "type": "profit_trade",
+        "symbols": ["SOL", "BTC", "WBTC"],
+        "minVolumeUsd": 2500,
+        "minPnlVolumeRatio": 0.1
+      }
+    },
+    {
+      "id": "disc-30m-close",
+      "category": "discipline",
+      "difficulty": "easy",
+      "points": 5,
+      "title": "No Rush",
+      "description": "Close one eligible trade after holding it for at least 30 minutes.",
+      "rule": {
+        "type": "min_duration_trade",
+        "minDurationSeconds": 1800
+      }
+    },
+    {
+      "id": "style-sl-tp",
+      "category": "style",
+      "difficulty": "hard",
+      "points": 12,
+      "title": "Trade With A Plan",
+      "description": "Close one trade that exits via stop-loss or take-profit.",
+      "rule": {
+        "type": "sl_tp_close",
+        "closedBySlTp": true
+      }
+    }
+  ],
+  "fullSetBonus": 5
+}

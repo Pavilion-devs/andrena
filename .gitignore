@@ -1,0 +1,15 @@
+.DS_Store
+.env
+.env.local
+.next
+node_modules
+coverage
+dist
+*.log
+*.tsbuildinfo
+fail.mp3
+GUIDE.md
+data/*.json
+!data/.gitkeep
+details.txt
+bounty-research.md

@@ -1,0 +1,83 @@
+competition:
+  name: "Battlecards League - Week 1"
+  timezone: "UTC"
+  registration_mode: "open"
+  require_profile: false
+  week_duration_days: 7
+  day_reset_hour_utc: 12
+
+eligibility:
+  min_trade_volume_usd: 250
+  require_open_and_close_within_league: true
+  require_registration_before_open: true
+
+daily_scoring_cap:
+  bands:
+    - up_to_volume_usd: 100000
+      multiplier: 1.0
+    - up_to_volume_usd: 200000
+      multiplier: 0.25
+    - up_to_volume_usd: 999999999
+      multiplier: 0.0
+
+trade_scoring:
+  max_trade_points: 25
+  size_score:
+    formula: "min(8, sqrt(effective_volume_usd / 500))"
+  quality_score:
+    formula: "clamp(pnl_volume_ratio * 4, -8, 16)"
+  duration_buckets:
+    - min_seconds: 0
+      max_seconds: 119
+      points: 0
+    - min_seconds: 120
+      max_seconds: 599
+      points: 1
+    - min_seconds: 600
+      max_seconds: 1799
+      points: 2
+    - min_seconds: 1800
+      max_seconds: 14399
+      points: 3
+    - min_seconds: 14400
+      max_seconds: 9999999
+      points: 4
+  discipline:
+    closed_by_sl_tp_points: 2
+  liquidation_penalty_points: 5
+
+battlecards:
+  cards_per_day: 3
+  category_mix:
+    - performance
+    - discipline
+    - style_or_market
+  points:
+    easy: 5
+    medium: 8
+    hard: 12
+  full_set_bonus: 5
+  dedupe_window_days: 7
+
+streaks:
+  active_day_points_after_day_one: 2
+  perfect_week_bonus: 10
+
+raffles:
+  tickets:
+    first_eligible_trade_of_day: 1
+    per_completed_card: 1
+    full_set_completion: 2
+    perfect_week: 3
+
+rewards:
+  weekly_pool_split:
+    leaderboard_pct: 60
+    completion_raffle_pct: 20
+    consistency_pct: 10
+    cosmetic_or_bonus_pct: 10
+
+operations:
+  poll_interval_ms: 60000
+  leaderboard_snapshot_ms: 300000
+  recompute_enabled: true
